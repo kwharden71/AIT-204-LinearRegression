@@ -16,8 +16,6 @@ def Main():
     # =====================================
     st.header("Part 1")
 
-    # TODO: Answer the questions and fix math formating
-    # TODO: Show every step of the process per rubric
     st.markdown(f"""
         a. Interpret $\\frac{{dy}}{{dx}}$ geometrically.\n
         * $\\frac{{dy}}{{dx}}$ represents the first dervivative of an equation. Geometrically this is an equation that gives the slope of a tangent line of the observed equation.
