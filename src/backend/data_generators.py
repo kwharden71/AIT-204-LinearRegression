@@ -78,7 +78,7 @@ class SyntheticDataGenerator:
 
         # Create DataFrame for easy manipulation and export
         df = pd.DataFrame({
-            'x': x,
+            'X': x,
             'y': y,
             'y_true': y_true
         })

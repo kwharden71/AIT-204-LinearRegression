@@ -142,13 +142,17 @@ def Main():
     # SECTION 2: Part 2
     # ==============================
 
+    # ==========================================
+    # SIDEBAR - Model Parameters
+    # ==========================================
+
     st.sidebar.header("🎲 Data Generation")
 
     n_samples = st.sidebar.slider(
         "Number of Samples",
         min_value=50,
-        max_value=500,
-        value=100,
+        max_value=5000,
+        value=1000,
         step=50,
         help="Number of data points to generate"
     )
@@ -171,10 +175,6 @@ def Main():
     )
 
     st.sidebar.divider()
-
-    # ==========================================
-    # SIDEBAR - Model Parameters
-    # ==========================================
 
     st.sidebar.header("🤖 Model Parameters")
 
@@ -207,7 +207,77 @@ def Main():
 
         st.sidebar.success("✅ Data generated!")
 
-    st.markdown(f"{st.session_state.data.head()}")
+    if "data_generated" not in st.session_state:
+        st.session_state.data_generated = False
+        st.info("👆 Click 'Generate Data' to generate synthetic data")
+        st.stop()
+
+    # ===========================
+    # Train the Linear Regression Model
+    # ===========================
+
+    data = st.session_state.data
+    train_df, test_df = backend.helpers.train_test_split(data, percentage=80)
+
+    linear_model = backend.linear_regression.LinearRegression(
+        learning_rate=learning_rate,
+        n_iterations=n_iterations
+    )
+
+    linear_model.fit(
+        X=train_df.drop(columns=["y", "y_true"]),
+        y=train_df["y"]
+    )
+
+    y_test_pred = linear_model.predict(test_df.drop(columns=["y", "y_true"]))
+
+    # ===========================
+    # Displaying Data and Results
+    # ===========================
+
+    st.header("Part 2: Linear Regression from Scratch")
+
+    st.subheader("Generated Data")
+    st.write("First few rows of the generated dataset:")
+    st.dataframe(data.head())
+    st.write(f"Total samples: {len(data)}")
+    st.write(f"Training samples: {len(train_df)} | Testing samples: {len(test_df)}")
+
+    st.subheader("Scatter Plot of Data Points, Test Points, and Regression Line")
+    linear_model.plot_regression_line(train_df, test_df)
+
+    st.subheader("Model Performance on Training Set")
+    y_train_pred = linear_model.predict(train_df.drop(columns=["y", "y_true"]))
+    train_metrics = linear_model.compute_metrics(
+        y_true=train_df["y"],
+        y_pred=y_train_pred
+    )
+    st.write("Training MSE:", f"{train_metrics['MSE']:.4f}")
+    st.write("Training RMSE:", f"{train_metrics['RMSE']:.4f}")
+    st.write("Training MAE:", f"{train_metrics['MAE']:.4f}")
+    st.write("Training R²:", f"{train_metrics['R2']:.4f}")
+
+
+    test_metrics = linear_model.compute_metrics(
+        y_true=test_df["y"],
+        y_pred=y_test_pred
+    )
+    st.subheader("Model Performance on Test Set")
+    st.write("Mean Squared Error (MSE):", f"{test_metrics['MSE']:.4f}")
+    st.write("Root Mean Squared Error (RMSE):", f"{test_metrics['RMSE']:.4f}")
+    st.write("Mean Absolute Error (MAE):", f"{test_metrics['MAE']:.4f}")
+    st.write("R-squared (R²):", f"{test_metrics['R2']:.4f}")
+
+    st.subheader("Model Parameters")
+    st.write("Weights:", linear_model.weights[0])
+    st.write("Bias:", linear_model.bias)
+
+    st.subheader("Loss Curve")
+    st.plotly_chart(linear_model.plot_training_progress())
+
+    st.subheader("Residuals Plot of Test Set")
+    st.plotly_chart(linear_model.plot_residuals(test_df["y"], y_test_pred))
+    
 
 if __name__ == "__main__":
     Main()
